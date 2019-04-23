@@ -20,13 +20,18 @@ import java.util.List;
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     private List<Movie> movies;
+    private ClickListener itemClickListener;
 
-    public HomeAdapter(List<Movie> movies) {
+    HomeAdapter(List<Movie> movies, ClickListener listener) {
         this.movies = movies;
+        itemClickListener = listener;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public interface ClickListener {
+        void onItemClickListener(int position);
+    }
 
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private final MovieImageUrlBuilder movieImageUrlBuilder = new MovieImageUrlBuilder();
 
         private final TextView titleTextView;
@@ -34,26 +39,31 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         private final TextView releaseDateTextView;
         private final ImageView posterImageView;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
             genresTextView = itemView.findViewById(R.id.genresTextView);
             releaseDateTextView = itemView.findViewById(R.id.releaseDateTextView);
             posterImageView = itemView.findViewById(R.id.posterImageView);
+            itemView.setOnClickListener(this);
         }
 
-        public void bind(Movie movie) {
+        void bind(Movie movie) {
             titleTextView.setText(movie.title);
             genresTextView.setText(TextUtils.join(", ", movie.genres));
             releaseDateTextView.setText(movie.releaseDate);
 
             String posterPath = movie.posterPath;
-            if (TextUtils.isEmpty(posterPath) == false) {
+            if (!TextUtils.isEmpty(posterPath)) {
                 Glide.with(itemView)
                         .load(movieImageUrlBuilder.buildPosterUrl(posterPath))
                         .apply(new RequestOptions().placeholder(R.drawable.ic_image_placeholder))
                         .into(posterImageView);
             }
+        }
+
+        @Override public void onClick(View v) {
+            itemClickListener.onItemClickListener(movies.get(getAdapterPosition()).id);
         }
     }
 
