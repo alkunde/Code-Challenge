@@ -16,6 +16,7 @@ import com.arctouch.codechallenge.model.Genre;
 import com.arctouch.codechallenge.model.Movie;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -24,6 +25,7 @@ public class HomeActivity extends BaseActivity implements HomeAdapter.ClickListe
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
+    public static final String EXTRA_MOVIE_ID = "movie_id";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -37,23 +39,28 @@ public class HomeActivity extends BaseActivity implements HomeAdapter.ClickListe
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(response -> {
-                    for (Movie movie : response.results) {
-                        movie.genres = new ArrayList<>();
-                        for (Genre genre : Cache.getGenres()) {
-                            if (movie.genreIds.contains(genre.id)) {
-                                movie.genres.add(genre);
-                            }
-                        }
-                    }
-
-                    recyclerView.setAdapter(new HomeAdapter(response.results, this));
-                    progressBar.setVisibility(View.GONE);
+                    showMovieList(response.results);
                 });
     }
 
     @Override public void onItemClickListener(int id) {
         Intent intent = new Intent(this, DetailActivity.class);
-        intent.putExtra("id", id);
+        intent.putExtra(EXTRA_MOVIE_ID, id);
         startActivity(intent);
     }
+
+    private void showMovieList(List<Movie> movies) {
+        for (Movie movie : movies) {
+            movie.genres = new ArrayList<>();
+            for (Genre genre : Cache.getGenres()) {
+                if (movie.genreIds.contains(genre.id)) {
+                    movie.genres.add(genre);
+                }
+            }
+        }
+
+        recyclerView.setAdapter(new HomeAdapter(movies, this));
+        progressBar.setVisibility(View.GONE);
+    }
+
 }
